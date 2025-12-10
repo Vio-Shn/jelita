@@ -1,0 +1,523 @@
+{% extends "base.html" %} {% block title %}{{ product.name }} - Jelita{%
+endblock %} {% block content %}
+<div
+  class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-amber-50 min-h-screen"
+>
+  <!-- New layout: thumbnail column + main image + info panel -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-16">
+    <!-- Left: Thumbnail Column -->
+    <div class="lg:col-span-1 order-2 lg:order-1">
+      <div class="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible">
+        {% set images = product.get('images', {}).get('Dusty Pink',
+        [product.image_url or product['image_url']]) %} {% for img in images[:4]
+        %}
+        <button
+          onclick="goToSlide({{ loop.index0 }})"
+          class="thumbnail-btn flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 {% if loop.first %}border-brand-navy{% else %}border-slate-300{% endif %} hover:border-brand-navy transition-all"
+        >
+          <img
+            src="{{ img }}"
+            alt="Thumbnail {{ loop.index }}"
+            class="w-full h-full object-cover"
+          />
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Center: Main Product Image -->
+    <div class="lg:col-span-6 order-1 lg:order-2">
+      <div class="relative bg-white rounded-2xl overflow-hidden shadow-md">
+        <div class="carousel-container relative aspect-square">
+          {% for img in images %}
+          <div
+            class="carousel-slide {% if loop.first %}active{% endif %} absolute inset-0 opacity-0 transition-opacity duration-500"
+          >
+            <img
+              src="{{ img }}"
+              alt="{{ product.name }} - Slide {{ loop.index }}"
+              class="w-full h-full object-cover"
+            />
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Product Info Panel with Description -->
+    <div class="lg:col-span-5 order-3">
+      <div class="bg-white rounded-2xl p-6 shadow-md">
+        <!-- Product Title -->
+        <h1 class="text-2xl font-bold text-slate-900 mb-3">
+          {{ product.name or product['name'] }}
+        </h1>
+
+        <!-- Rating -->
+        <div class="flex items-center gap-2 mb-4">
+          <div class="flex text-amber-400">
+            {% set rating = product.rating or product.get('rating', 5) %} {% for
+            i in range(rating|int) %}★{% endfor %} {% for i in range(5 -
+            rating|int) %}☆{% endfor %}
+          </div>
+          <span class="text-slate-600 text-sm">{{ rating }}/5</span>
+          {% set reviews = product.reviews_count or product.get('reviews_count',
+          4) %}
+          <span class="text-slate-600 text-sm">({{ reviews }} Ulasan)</span>
+        </div>
+
+        <!-- Price -->
+        <div class="mb-6 pb-6 border-b border-slate-200">
+          {% set disc_price = product.discount_price or
+          product.get('discount_price') %} {% set reg_price = product.price or
+          product.get('price') %}
+          <span class="text-3xl font-bold text-slate-900"
+            >Rp. {{ "{:,.0f}".format(reg_price).replace(',', '.') }}</span
+          >
+        </div>
+
+        <!-- Detail Produk Section -->
+        <div class="mb-6">
+          <h3 class="font-bold text-slate-900 mb-3">Detail Produk</h3>
+          {% set desc = product.description or product.get('description', 'Hijab
+          segiempat paris original terbaru dengan material yang super lembut
+          akan melengkapi penampilan kamu sehari-hari. Bahan yang mudah
+          dibentuk, ringan, adem dan tegak di dalm sehingga bisa digunakan daily
+          maupun formal.') %}
+          <p class="text-slate-600 leading-relaxed text-sm mb-4">{{ desc }}</p>
+
+          <!-- Bahan -->
+          <div class="mb-3">
+            <p class="font-semibold text-slate-900 mb-1">Bahan</p>
+            <p class="text-slate-600 text-sm">Original Paris Japan</p>
+          </div>
+
+          <!-- Petunjuk Perawatan -->
+          <div>
+            <p class="font-semibold text-slate-900 mb-2">Petunjuk Perawatan</p>
+            <ul class="text-slate-600 text-sm space-y-1">
+              <li class="flex items-start gap-2">
+                <span class="text-slate-900">•</span>
+                <span>Cuci dengan tangan</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-slate-900">•</span>
+                <span>Hindari menjemur di bawah sinar matahari langsung</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="text-slate-900">•</span>
+                <span>Setrika dengan tempratur rendah</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Adding color selector buttons -->
+        {% set colors = product.get('images', {}).keys() | list %} {% if colors
+        %}
+        <div class="mb-6 pb-6 border-b border-slate-200">
+          <h3 class="font-bold text-slate-900 mb-3">Pilih Warna</h3>
+          <div class="flex flex-wrap gap-2">
+            {% for color in colors %}
+            <button
+              onclick="selectColor('{{ color }}')"
+              class="color-btn px-4 py-2 border-2 rounded-lg text-sm font-medium transition-all {% if loop.first %}border-brand-navy bg-brand-navy text-brand-yellow{% else %}border-slate-300 text-slate-700 hover:border-slate-400{% endif %}"
+              data-color="{{ color }}"
+            >
+              {{ color }}
+            </button>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Quantity Selector -->
+        <div class="flex items-center gap-3 mb-4">
+          <button
+            onclick="decreaseQuantity()"
+            class="w-10 h-10 flex items-center justify-center bg-brand-navy text-brand-yellow rounded-lg hover:opacity-90 transition-opacity font-bold"
+          >
+            -
+          </button>
+          <input
+            type="number"
+            id="quantity"
+            value="1"
+            min="1"
+            class="w-16 text-center text-lg font-semibold border border-slate-300 rounded-lg px-3 py-2"
+          />
+          <button
+            onclick="increaseQuantity()"
+            class="w-10 h-10 flex items-center justify-center bg-brand-navy text-brand-yellow rounded-lg hover:opacity-90 transition-opacity font-bold"
+          >
+            +
+          </button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="space-y-3">
+          <button
+            onclick="addToCart({{ product.id }})"
+            class="w-full bg-brand-navy text-brand-yellow py-3 rounded-lg hover:opacity-90 transition-opacity font-semibold text-center"
+          >
+            Masukkan Keranjang
+          </button>
+          <button
+            onclick="buyNow({{ product.id }})"
+            class="w-full bg-white border-2 border-brand-navy text-brand-navy py-3 rounded-lg hover:bg-stone-50 transition-colors font-semibold text-center"
+          >
+            Beli Sekarang
+          </button>
+        </div>
+
+        <!-- Hidden Fields for Color and Size -->
+        <input type="hidden" id="selected-color" value="Default" />
+        <input type="hidden" id="selected-size" value="M" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Kamu Mungkin Suka Section -->
+  {% if related_products %}
+  <section class="mt-16">
+    <h2 class="text-3xl font-bold text-slate-900 mb-8">Kamu Mungkin Suka</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+      {% for related_product in related_products %}
+      <div
+        class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all group"
+      >
+        <div class="aspect-square bg-slate-100 overflow-hidden">
+          <img
+            src="{{ related_product.image_url or related_product.get('image_url') }}"
+            alt="{{ related_product.name or related_product.get('name') }}"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        </div>
+        <div class="p-4">
+          <h3 class="font-semibold text-slate-900 mb-2 line-clamp-1">
+            {{ related_product.name or related_product.get('name') }}
+          </h3>
+          {% set rp_price = related_product.price or
+          related_product.get('price') %}
+          <p class="font-bold text-slate-900 text-lg mb-3">
+            Rp. {{ "{:,.0f}".format(rp_price).replace(',', '.') }}
+          </p>
+          {% set rp_id = related_product.id or related_product.get('id') %}
+          <a
+            href="{{ url_for('product_detail', product_id=rp_id) }}"
+            class="block w-full text-center bg-brand-navy text-brand-yellow py-2 rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
+          >
+            Lihat Detail
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+
+<script>
+  let currentSlide = 0;
+  let currentImages = [];
+
+  // Product images data
+  const productImages = {{ product.get('images', {}) | tojson | safe }};
+
+  // Initialize carousel
+  document.addEventListener('DOMContentLoaded', function() {
+      const firstColor = 'Dusty Pink';
+      if (productImages && productImages[firstColor]) {
+          currentImages = productImages[firstColor];
+      }
+
+      // Show first slide
+      const slides = document.querySelectorAll('.carousel-slide');
+      if (slides.length > 0) {
+          slides[0].style.opacity = '1';
+      }
+  });
+
+  function selectColor(color) {
+      console.log('[v0] Selecting color:', color);
+
+      // Update selected color in hidden input
+      document.getElementById('selected-color').value = color;
+
+      // Update active state on color buttons
+      document.querySelectorAll('.color-btn').forEach(btn => {
+          if (btn.dataset.color === color) {
+              btn.classList.remove('border-slate-300', 'text-slate-700');
+              btn.classList.add('border-brand-navy', 'bg-brand-navy', 'text-brand-yellow');
+          } else {
+              btn.classList.remove('border-brand-navy', 'bg-brand-navy', 'text-brand-yellow');
+              btn.classList.add('border-slate-300', 'text-slate-700');
+          }
+      });
+
+      // Update carousel images if color has images
+      if (productImages && productImages[color]) {
+          updateCarouselImages(color);
+      }
+  }
+
+  function updateCarouselImages(color) {
+      const images = productImages[color];
+      console.log('[v0] Updating carousel with images:', images);
+
+      if (!images || images.length === 0) {
+          console.log('[v0] No images found for color:', color);
+          return;
+      }
+
+      // Update current images
+      currentImages = images;
+
+      // Get carousel container
+      const carouselContainer = document.querySelector('.carousel-container');
+      if (!carouselContainer) {
+          console.error('[v0] Carousel container not found');
+          return;
+      }
+
+      // Clear existing slides
+      carouselContainer.innerHTML = '';
+
+      // Create new slides
+      images.forEach((imgUrl, index) => {
+          const slide = document.createElement('div');
+          slide.className = `carousel-slide absolute inset-0 opacity-0 transition-opacity duration-500 ${index === 0 ? 'active' : ''}`;
+
+          const img = document.createElement('img');
+          img.src = imgUrl;
+          img.alt = `Product ${color} - Slide ${index + 1}`;
+          img.className = 'w-full h-full object-cover';
+
+          slide.appendChild(img);
+          carouselContainer.appendChild(slide);
+      });
+
+      // Update thumbnails
+      const thumbnailContainer = document.querySelector('.lg\\:col-span-1 > div');
+      if (thumbnailContainer) {
+          thumbnailContainer.innerHTML = '';
+
+          images.slice(0, 4).forEach((imgUrl, index) => {
+              const btn = document.createElement('button');
+              btn.onclick = () => goToSlide(index);
+              btn.className = `thumbnail-btn flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${index === 0 ? 'border-brand-navy' : 'border-slate-300'} hover:border-brand-navy transition-all`;
+
+              const img = document.createElement('img');
+              img.src = imgUrl;
+              img.alt = `Thumbnail ${index + 1}`;
+              img.className = 'w-full h-full object-cover';
+
+              btn.appendChild(img);
+              thumbnailContainer.appendChild(btn);
+          });
+      }
+
+      // Reset to first slide
+      currentSlide = 0;
+      const slides = document.querySelectorAll('.carousel-slide');
+      if (slides.length > 0) {
+          slides[0].style.opacity = '1';
+      }
+
+      console.log('[v0] Carousel updated successfully');
+  }
+
+  function goToSlide(n) {
+      const slides = document.querySelectorAll('.carousel-slide');
+      const thumbnails = document.querySelectorAll('.thumbnail-btn');
+
+      if (slides.length === 0) return;
+
+      // Hide all slides
+      slides.forEach(slide => slide.style.opacity = '0');
+
+      // Remove active state from all thumbnails
+      thumbnails.forEach(thumb => {
+          thumb.classList.remove('border-brand-navy');
+          thumb.classList.add('border-slate-300');
+      });
+
+      // Update current slide index
+      currentSlide = n;
+      if (currentSlide >= slides.length) currentSlide = 0;
+      if (currentSlide < 0) currentSlide = slides.length - 1;
+
+      // Show current slide
+      if (slides[currentSlide]) {
+          slides[currentSlide].style.opacity = '1';
+      }
+
+      // Highlight current thumbnail
+      if (thumbnails[currentSlide]) {
+          thumbnails[currentSlide].classList.add('border-brand-navy');
+          thumbnails[currentSlide].classList.remove('border-slate-300');
+      }
+  }
+
+  function increaseQuantity() {
+      const qty = document.getElementById('quantity');
+      qty.value = parseInt(qty.value) + 1;
+  }
+
+  function decreaseQuantity() {
+      const qty = document.getElementById('quantity');
+      if (parseInt(qty.value) > 1) {
+          qty.value = parseInt(qty.value) - 1;
+      }
+  }
+
+  function addToCart(productId) {
+      {% if current_user.is_authenticated %}
+      const quantity = document.getElementById('quantity').value;
+      const color = document.getElementById('selected-color').value || 'Default';
+      const size = document.getElementById('selected-size').value || 'M';
+
+      const formData = new FormData();
+      formData.append('product_id', productId);
+      formData.append('quantity', quantity);
+      formData.append('color', color);
+      formData.append('size', size);
+
+      fetch('{{ url_for("add_to_cart") }}', {
+          method: 'POST',
+          headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              // Update cart badge
+              const badge = document.querySelector('.cart-count');
+              if (badge && data.cart_count !== undefined) {
+                  badge.textContent = data.cart_count;
+              }
+
+              // Create and animate flying product image
+              createFlyingCartAnimation();
+          } else {
+              alert(data.message || 'Gagal menambahkan produk ke keranjang');
+          }
+      })
+      .catch(error => {
+          console.error('Error:', error);
+          alert('Terjadi kesalahan saat menambahkan produk');
+      });
+      {% else %}
+      alert('Silakan login terlebih dahulu');
+      window.location.href = '{{ url_for("login") }}';
+      {% endif %}
+  }
+
+  function buyNow(productId) {
+      {% if current_user.is_authenticated %}
+      addToCart(productId);
+      setTimeout(() => {
+          window.location.href = '{{ url_for("cart") }}';
+      }, 500);
+      {% else %}
+      alert('Silakan login terlebih dahulu');
+      window.location.href = '{{ url_for("login") }}';
+      {% endif %}
+  }
+
+  function createFlyingCartAnimation() {
+      // Get the main product image
+      const productImage = document.querySelector('.carousel-slide.active img');
+      if (!productImage) return;
+
+      // Get cart icon position
+      const cartIcon = document.querySelector('a[href="{{ url_for("cart") }}"]');
+      if (!cartIcon) return;
+
+      // Create flying element
+      const flyingImg = document.createElement('img');
+      flyingImg.src = productImage.src;
+      flyingImg.className = 'flying-cart-item';
+
+      // Get positions
+      const imgRect = productImage.getBoundingClientRect();
+      const cartRect = cartIcon.getBoundingClientRect();
+
+      // Set initial position
+      flyingImg.style.cssText = `
+          position: fixed;
+          top: ${imgRect.top}px;
+          left: ${imgRect.left}px;
+          width: ${imgRect.width}px;
+          height: ${imgRect.height}px;
+          z-index: 9999;
+          object-fit: cover;
+          border-radius: 8px;
+          pointer-events: none;
+          transition: all 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+      `;
+
+      document.body.appendChild(flyingImg);
+
+      // Trigger animation
+      setTimeout(() => {
+          flyingImg.style.cssText = `
+              position: fixed;
+              top: ${cartRect.top}px;
+              left: ${cartRect.left}px;
+              width: 40px;
+              height: 40px;
+              z-index: 9999;
+              object-fit: cover;
+              border-radius: 50%;
+              pointer-events: none;
+              opacity: 0;
+              transform: scale(0.1);
+              transition: all 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+          `;
+      }, 10);
+
+      // Remove element after animation
+      setTimeout(() => {
+          flyingImg.remove();
+
+          // Add bounce animation to cart icon
+          if (cartIcon) {
+              cartIcon.classList.add('cart-bounce');
+              setTimeout(() => {
+                  cartIcon.classList.remove('cart-bounce');
+              }, 500);
+          }
+      }, 900);
+  }
+</script>
+
+<style>
+  .carousel-slide.active {
+    opacity: 1 !important;
+  }
+
+  /* Add flying cart and bounce animation styles */
+  @keyframes cartBounce {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    25% {
+      transform: scale(1.2);
+    }
+    50% {
+      transform: scale(0.95);
+    }
+    75% {
+      transform: scale(1.1);
+    }
+  }
+
+  .cart-bounce {
+    animation: cartBounce 0.5s ease-in-out;
+  }
+</style>
+
+{% endblock %}

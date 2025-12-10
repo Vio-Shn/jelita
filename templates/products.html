@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Produk - Jelita{% endblock %}
+
+{% block content %}
+<div style="background-color: #191C33;" class="text-white py-8 mb-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-4xl font-bold" style="color: #ffffff;">Jelajahi Produk Kami</h1>
+        <p class="mt-2" style="color: #ffffff;">Koleksi hijab dan aksesori Muslim premium</p>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Sidebar Filter -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold mb-4 text-stone-900">Filter Produk</h3>
+                
+                <!-- Category Filter -->
+                <div class="mb-6">
+                    <h4 class="font-semibold mb-3 text-stone-900">Kategori</h4>
+                    <div class="space-y-2">
+                        <a href="{{ url_for('products') }}" class="block px-4 py-2.5 rounded-lg transition-colors {% if not selected_category %}text-white font-semibold{% else %}text-stone-700 hover:bg-stone-100{% endif %}" {% if not selected_category %}style="background-color: #191C33; color: #FFF17F;"{% endif %}>
+                            Semua Produk
+                        </a>
+                        {% for cat in categories %}
+                        <a href="{{ url_for('products', category=cat) }}" class="block px-4 py-2.5 rounded-lg transition-colors {% if selected_category == cat %}text-white font-semibold{% else %}text-stone-700 hover:bg-stone-100{% endif %}" {% if selected_category == cat %}style="background-color: #191C33; color: #FFF17F;"{% endif %}>
+                            {{ cat }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="lg:col-span-3">
+            {% if products %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {% set colors = ['pink', 'green', 'amber', 'blue'] %}
+                {% for product in products %}
+                {% set color = colors[loop.index0 % 4] %}
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow group">
+                    <div class="aspect-square bg-{{ color }}-100 overflow-hidden relative">
+                        <img src="{{ product.image_url or product.get('image_url') or '/placeholder.svg?height=300&width=300' }}" alt="{{ product.name or product.get('name') }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform product-thumbnail">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-semibold text-slate-900 mb-1 truncate text-center">{{ product.name or product.get('name') }}</h3>
+                        <div class="text-sm text-slate-500 mb-3 text-center">{{ product.category or product.get('category') }}</div>
+                        
+                        {% set p_disc = product.discount_price or product.get('discount_price') %}
+                        {% set p_price = product.price or product.get('price') %}
+                        {% if p_disc %}
+                        <div class="flex gap-2 mb-3 justify-center">
+                            <span class="font-bold text-stone-700">Rp {{ "{:,.0f}".format(p_disc).replace(',', '.') }}</span>
+                            <span class="text-slate-400 line-through text-sm">Rp {{ "{:,.0f}".format(p_price).replace(',', '.') }}</span>
+                        </div>
+                        {% else %}
+                        <p class="font-bold text-stone-700 mb-3 text-center">Rp {{ "{:,.0f}".format(p_price).replace(',', '.') }}</p>
+                        {% endif %}
+                        
+                        {% set p_id = product.id or product.get('id') %}
+                        
+                        <div class="space-y-2">
+                            <button onclick="addToCartFromGrid({{ p_id }}, this)" class="w-full bg-brand-navy text-brand-yellow py-2 rounded hover:opacity-90 transition-opacity text-sm font-medium flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                Tambah ke Keranjang
+                            </button>
+                            <a href="{{ url_for('product_detail', product_id=p_id) }}" class="block w-full text-center bg-white border-2 border-brand-navy text-brand-navy py-2 rounded hover:bg-stone-50 transition-colors text-sm font-medium">
+                                Lihat Detail
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+            <div class="flex justify-center gap-2 mt-8">
+                {% if current_page > 1 %}
+                <a href="{{ url_for('products', page=current_page-1, category=selected_category) }}" class="px-4 py-2 border border-stone-300 rounded hover:bg-stone-100">← Sebelumnya</a>
+                {% endif %}
+                
+                {% for page_num in range(1, total_pages + 1) %}
+                    {% if page_num == current_page %}
+                    <span class="px-4 py-2 bg-brand-navy text-brand-yellow rounded">{{ page_num }}</span>
+                    {% else %}
+                    <a href="{{ url_for('products', page=page_num, category=selected_category) }}" class="px-4 py-2 border border-stone-300 rounded hover:bg-stone-100">{{ page_num }}</a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if current_page < total_pages %}
+                <a href="{{ url_for('products', page=current_page+1, category=selected_category) }}" class="px-4 py-2 border border-stone-300 rounded hover:bg-stone-100">Berikutnya →</a>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-12">
+                <p class="text-slate-500 text-lg">Tidak ada produk yang ditemukan</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add JavaScript for flying cart animation from products grid -->
+<script>
+function addToCartFromGrid(productId, buttonElement) {
+    {% if current_user.is_authenticated %}
+    const formData = new FormData();
+    formData.append('product_id', productId);
+    formData.append('quantity', 1);
+    formData.append('color', 'Default');
+    formData.append('size', 'M');
+
+    fetch('{{ url_for("add_to_cart") }}', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update cart badge
+            const badge = document.querySelector('.cart-count');
+            if (badge && data.cart_count !== undefined) {
+                badge.textContent = data.cart_count;
+            }
+            
+            // Create flying animation from product card
+            const productCard = buttonElement.closest('.group');
+            const productImage = productCard.querySelector('.product-thumbnail');
+            createFlyingCartAnimation(productImage);
+        } else {
+            alert(data.message || 'Gagal menambahkan produk ke keranjang');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat menambahkan produk');
+    });
+    {% else %}
+    alert('Silakan login terlebih dahulu');
+    window.location.href = '{{ url_for("login") }}';
+    {% endif %}
+}
+
+function createFlyingCartAnimation(productImage) {
+    if (!productImage) return;
+    
+    // Get cart icon position
+    const cartIcon = document.querySelector('a[href="{{ url_for("cart") }}"]');
+    if (!cartIcon) return;
+    
+    // Create flying element
+    const flyingImg = document.createElement('img');
+    flyingImg.src = productImage.src;
+    flyingImg.className = 'flying-cart-item';
+    
+    // Get positions
+    const imgRect = productImage.getBoundingClientRect();
+    const cartRect = cartIcon.getBoundingClientRect();
+    
+    // Set initial position
+    flyingImg.style.cssText = `
+        position: fixed;
+        top: ${imgRect.top}px;
+        left: ${imgRect.left}px;
+        width: ${imgRect.width}px;
+        height: ${imgRect.height}px;
+        z-index: 9999;
+        object-fit: cover;
+        border-radius: 8px;
+        pointer-events: none;
+        transition: all 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+    `;
+    
+    document.body.appendChild(flyingImg);
+    
+    // Trigger animation
+    setTimeout(() => {
+        flyingImg.style.cssText = `
+            position: fixed;
+            top: ${cartRect.top}px;
+            left: ${cartRect.left}px;
+            width: 40px;
+            height: 40px;
+            z-index: 9999;
+            object-fit: cover;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            transform: scale(0.1);
+            transition: all 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+        `;
+    }, 10);
+    
+    // Remove element after animation
+    setTimeout(() => {
+        flyingImg.remove();
+        
+        // Add bounce animation to cart icon
+        if (cartIcon) {
+            cartIcon.classList.add('cart-bounce');
+            setTimeout(() => {
+                cartIcon.classList.remove('cart-bounce');
+            }, 500);
+        }
+    }, 900);
+}
+</script>
+
+<style>
+/* Add flying cart and bounce animation styles */
+@keyframes cartBounce {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(1.2); }
+    50% { transform: scale(0.95); }
+    75% { transform: scale(1.1); }
+}
+
+.cart-bounce {
+    animation: cartBounce 0.5s ease-in-out;
+}
+</style>
+{% endblock %}

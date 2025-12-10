@@ -1,0 +1,660 @@
+{% extends "base.html" %} {% block title %}Checkout - Jelita{% endblock %} {%
+block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  {% if cart_items %}
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+    <!-- Left Side: Address and Payment Form -->
+    <div class="space-y-8">
+      <form method="POST" id="checkoutForm">
+        <!-- Use selected_items variable passed from route -->
+        <input
+          type="hidden"
+          name="selected_items"
+          value="{{ selected_items }}"
+        />
+
+        <div class="space-y-6 mb-8">
+          <h2
+            class="text-2xl font-bold text-slate-900"
+            style="font-family: Georgia, serif"
+          >
+            Alamat Pengiriman
+          </h2>
+
+          <div class="space-y-5">
+            <div>
+              <label
+                for="name"
+                class="block text-sm font-semibold text-slate-900 mb-2"
+                >Nama Lengkap</label
+              >
+              <input
+                type="text"
+                id="name"
+                name="name"
+                required
+                class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-0 focus:border-slate-900 transition-colors"
+                style="font-size: 0.95rem"
+              />
+            </div>
+
+            <div>
+              <label
+                for="phone"
+                class="block text-sm font-semibold text-slate-900 mb-2"
+                >No. Telepon</label
+              >
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                required
+                class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-0 focus:border-slate-900 transition-colors"
+                style="font-size: 0.95rem"
+              />
+            </div>
+
+            <div>
+              <label
+                for="address"
+                class="block text-sm font-semibold text-slate-900 mb-2"
+                >Alamat Lengkap</label
+              >
+              <textarea
+                id="address"
+                name="address"
+                required
+                rows="3"
+                class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-0 focus:border-slate-900 transition-colors resize-none"
+                style="font-size: 0.95rem"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4 mb-8">
+          <button
+            type="button"
+            onclick="toggleDropdown('payment')"
+            class="w-full flex items-center justify-between px-4 py-4 border-2 border-slate-900 rounded-lg bg-white hover:bg-slate-50 transition-colors"
+          >
+            <span
+              class="font-semibold text-slate-900"
+              style="font-size: 1.05rem"
+              >Metode Pembayaran</span
+            >
+            <svg
+              class="w-5 h-5 text-slate-900 transition-transform duration-300"
+              id="payment-arrow"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
+            </svg>
+          </button>
+
+          <!-- Updated payment method radio buttons with onchange handler -->
+          <div id="payment-dropdown" class="hidden space-y-2 pl-4">
+            <label class="flex items-center gap-3 cursor-pointer py-2">
+              <input
+                type="radio"
+                name="payment_method"
+                value="bank_transfer"
+                checked
+                class="w-4 h-4 accent-slate-900"
+                onchange="showPaymentForm('bank_transfer')"
+              />
+              <span class="text-slate-700">Transfer Bank</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer py-2">
+              <input
+                type="radio"
+                name="payment_method"
+                value="ewallet"
+                class="w-4 h-4 accent-slate-900"
+                onchange="showPaymentForm('ewallet')"
+              />
+              <span class="text-slate-700">E-Wallet (OVO, Dana, GoPay)</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer py-2">
+              <input
+                type="radio"
+                name="payment_method"
+                value="credit_card"
+                class="w-4 h-4 accent-slate-900"
+                onchange="showPaymentForm('credit_card')"
+              />
+              <span class="text-slate-700">Kartu Kredit/Debit</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer py-2">
+              <input
+                type="radio"
+                name="payment_method"
+                value="cod"
+                class="w-4 h-4 accent-slate-900"
+                onchange="showPaymentForm('cod')"
+              />
+              <span class="text-slate-700">COD (Bayar di Tempat)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Added dynamic payment forms section -->
+        <div id="payment-forms-container" class="mb-8">
+          <!-- Bank Transfer Form -->
+          <div id="bank-transfer-form" class="payment-form space-y-4">
+            <h3 class="font-semibold text-slate-900 mb-3">
+              Pilih Bank untuk Virtual Account
+            </h3>
+            <div class="space-y-2">
+              <label
+                class="flex items-center gap-3 p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-slate-400 transition-colors"
+              >
+                <input
+                  type="radio"
+                  name="bank_choice"
+                  value="bca"
+                  checked
+                  class="w-4 h-4 accent-slate-900"
+                />
+                <span class="text-slate-700 font-medium"
+                  >BCA Virtual Account</span
+                >
+              </label>
+              <label
+                class="flex items-center gap-3 p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-slate-400 transition-colors"
+              >
+                <input
+                  type="radio"
+                  name="bank_choice"
+                  value="mandiri"
+                  class="w-4 h-4 accent-slate-900"
+                />
+                <span class="text-slate-700 font-medium"
+                  >Mandiri Virtual Account</span
+                >
+              </label>
+              <label
+                class="flex items-center gap-3 p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-slate-400 transition-colors"
+              >
+                <input
+                  type="radio"
+                  name="bank_choice"
+                  value="bni"
+                  class="w-4 h-4 accent-slate-900"
+                />
+                <span class="text-slate-700 font-medium"
+                  >BNI Virtual Account</span
+                >
+              </label>
+              <label
+                class="flex items-center gap-3 p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-slate-400 transition-colors"
+              >
+                <input
+                  type="radio"
+                  name="bank_choice"
+                  value="bri"
+                  class="w-4 h-4 accent-slate-900"
+                />
+                <span class="text-slate-700 font-medium"
+                  >BRI Virtual Account</span
+                >
+              </label>
+            </div>
+          </div>
+
+          <!-- E-Wallet Form -->
+          <div id="ewallet-form" class="payment-form hidden space-y-4">
+            <h3 class="font-semibold text-slate-900 mb-3">Pilih E-Wallet</h3>
+            <div class="space-y-3 mb-4">
+              <label
+                class="flex items-center gap-3 p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-slate-400 transition-colors"
+              >
+                <input
+                  type="radio"
+                  name="ewallet_choice"
+                  value="ovo"
+                  checked
+                  class="w-4 h-4 accent-slate-900"
+                />
+                <span class="text-slate-700 font-medium">OVO</span>
+              </label>
+              <label
+                class="flex items-center gap-3 p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-slate-400 transition-colors"
+              >
+                <input
+                  type="radio"
+                  name="ewallet_choice"
+                  value="dana"
+                  class="w-4 h-4 accent-slate-900"
+                />
+                <span class="text-slate-700 font-medium">DANA</span>
+              </label>
+              <label
+                class="flex items-center gap-3 p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-slate-400 transition-colors"
+              >
+                <input
+                  type="radio"
+                  name="ewallet_choice"
+                  value="gopay"
+                  class="w-4 h-4 accent-slate-900"
+                />
+                <span class="text-slate-700 font-medium">GoPay</span>
+              </label>
+            </div>
+            <div>
+              <label
+                for="ewallet_phone"
+                class="block text-sm font-semibold text-slate-900 mb-2"
+                >Nomor Telepon Terdaftar</label
+              >
+              <input
+                type="tel"
+                id="ewallet_phone"
+                name="ewallet_phone"
+                placeholder="08xxxxxxxxxx"
+                class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-0 focus:border-slate-900 transition-colors"
+                style="font-size: 0.95rem"
+              />
+              <p class="text-xs text-slate-500 mt-2">
+                Masukkan nomor telepon yang terdaftar di e-wallet Anda
+              </p>
+            </div>
+          </div>
+
+          <!-- Credit Card Form -->
+          <div id="credit-card-form" class="payment-form hidden space-y-4">
+            <h3 class="font-semibold text-slate-900 mb-3">Informasi Kartu</h3>
+            <div>
+              <label
+                for="card_number"
+                class="block text-sm font-semibold text-slate-900 mb-2"
+                >Nomor Kartu</label
+              >
+              <input
+                type="text"
+                id="card_number"
+                name="card_number"
+                placeholder="1234 5678 9012 3456"
+                maxlength="19"
+                class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-0 focus:border-slate-900 transition-colors"
+                style="font-size: 0.95rem"
+              />
+            </div>
+            <div>
+              <label
+                for="card_name"
+                class="block text-sm font-semibold text-slate-900 mb-2"
+                >Nama Pemegang Kartu</label
+              >
+              <input
+                type="text"
+                id="card_name"
+                name="card_name"
+                placeholder="Nama sesuai kartu"
+                class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-0 focus:border-slate-900 transition-colors"
+                style="font-size: 0.95rem"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  for="card_expiry"
+                  class="block text-sm font-semibold text-slate-900 mb-2"
+                  >Tanggal Kadaluarsa</label
+                >
+                <input
+                  type="text"
+                  id="card_expiry"
+                  name="card_expiry"
+                  placeholder="MM/YY"
+                  maxlength="5"
+                  class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-0 focus:border-slate-900 transition-colors"
+                  style="font-size: 0.95rem"
+                />
+              </div>
+              <div>
+                <label
+                  for="card_cvv"
+                  class="block text-sm font-semibold text-slate-900 mb-2"
+                  >CVV</label
+                >
+                <input
+                  type="text"
+                  id="card_cvv"
+                  name="card_cvv"
+                  placeholder="123"
+                  maxlength="3"
+                  class="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:ring-0 focus:border-slate-900 transition-colors"
+                  style="font-size: 0.95rem"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- COD Confirmation -->
+          <div id="cod-form" class="payment-form hidden">
+            <div class="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
+              <p class="text-slate-700">
+                <span class="font-semibold">Catatan:</span> Pembayaran akan
+                dilakukan saat barang diterima. Pastikan Anda menyiapkan uang
+                tunai sesuai total pembayaran.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <button
+            type="button"
+            onclick="toggleDropdown('shipping')"
+            class="w-full flex items-center justify-between px-4 py-4 border-2 border-slate-900 rounded-lg bg-white hover:bg-slate-50 transition-colors"
+          >
+            <span
+              class="font-semibold text-slate-900"
+              style="font-size: 1.05rem"
+              >Pengiriman</span
+            >
+            <svg
+              class="w-5 h-5 text-slate-900 transition-transform duration-300"
+              id="shipping-arrow"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
+            </svg>
+          </button>
+
+          <div id="shipping-dropdown" class="hidden space-y-2 pl-4">
+            <label
+              class="flex items-center justify-between cursor-pointer py-2"
+            >
+              <div class="flex items-center gap-3">
+                <input
+                  type="radio"
+                  name="shipping_method"
+                  value="regular"
+                  data-cost="15000"
+                  checked
+                  class="w-4 h-4 accent-slate-900"
+                  onchange="updateShippingCost()"
+                />
+                <span class="text-slate-700"
+                  >Regular (3-5 hari) - Rp 15.000</span
+                >
+              </div>
+            </label>
+            <label
+              class="flex items-center justify-between cursor-pointer py-2"
+            >
+              <div class="flex items-center gap-3">
+                <input
+                  type="radio"
+                  name="shipping_method"
+                  value="express"
+                  data-cost="25000"
+                  class="w-4 h-4 accent-slate-900"
+                  onchange="updateShippingCost()"
+                />
+                <span class="text-slate-700"
+                  >Express (1-2 hari) - Rp 25.000</span
+                >
+              </div>
+            </label>
+            <label
+              class="flex items-center justify-between cursor-pointer py-2"
+            >
+              <div class="flex items-center gap-3">
+                <input
+                  type="radio"
+                  name="shipping_method"
+                  value="same_day"
+                  data-cost="50000"
+                  class="w-4 h-4 accent-slate-900"
+                  onchange="updateShippingCost()"
+                />
+                <span class="text-slate-700">Same Day - Rp 50.000</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Right Side: Order Summary -->
+    <div class="lg:border-l-2 lg:border-slate-200 lg:pl-12">
+      <h2
+        class="text-2xl font-bold text-slate-900 mb-8"
+        style="font-family: Georgia, serif"
+      >
+        Detail Pesanan
+      </h2>
+
+      <div class="space-y-6">
+        {% for item in cart_items %}
+        <div class="flex gap-4">
+          <div
+            class="w-32 h-32 bg-gradient-to-br from-pink-100 to-pink-200 rounded-lg overflow-hidden flex-shrink-0"
+          >
+            {% if item.image_url %}
+            <img
+              src="{{ item.image_url }}"
+              alt="{{ item.name }}"
+              class="w-full h-full object-cover"
+            />
+            {% else %}
+            <div class="w-full h-full flex items-center justify-center">
+              <span class="text-pink-300 text-xs">No Image</span>
+            </div>
+            {% endif %}
+          </div>
+          <div class="flex-1">
+            <h3 class="font-bold text-slate-900 text-lg mb-1">
+              {{ item.name }}
+            </h3>
+            <p class="text-sm text-slate-600 mb-2">
+              {{ item.color if item.color else 'Default' }}
+            </p>
+            <p class="text-sm text-slate-500">X {{ item.quantity }}</p>
+            <p class="text-lg font-bold text-slate-900 mt-2">
+              Rp {{ "{:,.0f}".format(item.final_price) }}
+            </p>
+          </div>
+        </div>
+        {% endfor %}
+
+        <div class="border-t-2 border-slate-200 pt-6 space-y-3">
+          <div class="flex justify-between text-slate-700">
+            <span>Subtotal</span>
+            <span>Rp {{ "{:,.0f}".format(subtotal) }}</span>
+          </div>
+          <div class="flex justify-between text-slate-700">
+            <span>Diskon</span>
+            <span id="discount-amount"
+              >Rp {{ "{:,.0f}".format(discount) }}</span
+            >
+          </div>
+          <div class="flex justify-between text-slate-700">
+            <span>Biaya Pengiriman</span>
+            <span id="shipping-cost">Rp {{ "{:,.0f}".format(shipping) }}</span>
+          </div>
+          <div
+            class="border-t-2 border-slate-900 pt-3 flex justify-between text-lg font-bold text-slate-900"
+          >
+            <span>Total Pembayaran</span>
+            <span id="total-amount">Rp {{ "{:,.0f}".format(total) }}</span>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          onclick="return handleCheckout(event)"
+          class="w-full bg-brand-navy hover:opacity-90 text-brand-yellow font-bold py-4 rounded-lg transition-opacity text-lg"
+        >
+          Pesan
+        </button>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="text-center py-12">
+    <p class="text-slate-600 mb-4">Tidak ada item untuk checkout</p>
+    <a href="{{ url_for('products') }}" class="text-[#b68562] hover:underline"
+      >Lanjut Belanja</a
+    >
+  </div>
+  {% endif %}
+</div>
+
+<script>
+  function toggleDropdown(type) {
+      const dropdown = document.getElementById(`${type}-dropdown`);
+      const arrow = document.getElementById(`${type}-arrow`);
+
+      dropdown.classList.toggle('hidden');
+      arrow.classList.toggle('rotate-180');
+  }
+
+  function updateShippingCost() {
+      const selectedShipping = document.querySelector('input[name="shipping_method"]:checked');
+      if (selectedShipping) {
+          const cost = parseInt(selectedShipping.dataset.cost);
+          const subtotal = {{ subtotal }};
+          const discount = {{ discount }};
+          const total = subtotal - discount + cost;
+
+          document.getElementById('shipping-cost').textContent = 'Rp ' + cost.toLocaleString('id-ID');
+          document.getElementById('total-amount').textContent = 'Rp ' + total.toLocaleString('id-ID');
+      }
+  }
+
+  function showPaymentForm(method) {
+      // Hide all payment forms
+      document.querySelectorAll('.payment-form').forEach(form => {
+          form.classList.add('hidden');
+      });
+
+      // Show selected payment form
+      const formMap = {
+          'bank_transfer': 'bank-transfer-form',
+          'ewallet': 'ewallet-form',
+          'credit_card': 'credit-card-form',
+          'cod': 'cod-form'
+      };
+
+      const selectedForm = document.getElementById(formMap[method]);
+      if (selectedForm) {
+          selectedForm.classList.remove('hidden');
+      }
+  }
+
+  function handleCheckout(event) {
+      event.preventDefault();
+
+      const form = document.getElementById('checkoutForm');
+      const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+
+      // Validate basic form fields
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const address = document.getElementById('address').value.trim();
+
+      if (!name || !phone || !address) {
+          alert('Mohon lengkapi alamat pengiriman');
+          return false;
+      }
+
+      // Validate payment-specific fields
+      let isValid = true;
+      let errorMessage = '';
+
+      if (paymentMethod === 'ewallet') {
+          const ewalletPhone = document.getElementById('ewallet_phone').value.trim();
+          if (!ewalletPhone) {
+              errorMessage = 'Mohon masukkan nomor telepon e-wallet Anda';
+              isValid = false;
+          } else if (!/^08\d{8,11}$/.test(ewalletPhone)) {
+              errorMessage = 'Format nomor telepon tidak valid (harus dimulai dengan 08)';
+              isValid = false;
+          }
+      } else if (paymentMethod === 'credit_card') {
+          const cardNumber = document.getElementById('card_number').value.replace(/\s/g, '');
+          const cardName = document.getElementById('card_name').value.trim();
+          const cardExpiry = document.getElementById('card_expiry').value.trim();
+          const cardCvv = document.getElementById('card_cvv').value.trim();
+
+          if (!cardNumber || !cardName || !cardExpiry || !cardCvv) {
+              errorMessage = 'Mohon lengkapi semua informasi kartu';
+              isValid = false;
+          } else if (cardNumber.length < 13 || cardNumber.length > 16) {
+              errorMessage = 'Nomor kartu tidak valid';
+              isValid = false;
+          } else if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
+              errorMessage = 'Format tanggal kadaluarsa tidak valid (MM/YY)';
+              isValid = false;
+          } else if (cardCvv.length !== 3) {
+              errorMessage = 'CVV harus 3 digit';
+              isValid = false;
+          }
+      }
+
+      if (!isValid) {
+          alert(errorMessage);
+          return false;
+      }
+
+      // Submit form to process_payment route
+      form.action = "{{ url_for('process_payment') }}";
+      form.submit();
+
+      return true;
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+      // Show default payment form (bank transfer)
+      showPaymentForm('bank_transfer');
+
+      // Format card number input (add spaces every 4 digits)
+      const cardNumberInput = document.getElementById('card_number');
+      if (cardNumberInput) {
+          cardNumberInput.addEventListener('input', function(e) {
+              let value = e.target.value.replace(/\s/g, '');
+              let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+              e.target.value = formattedValue;
+          });
+      }
+
+      // Format expiry date (MM/YY)
+      const cardExpiryInput = document.getElementById('card_expiry');
+      if (cardExpiryInput) {
+          cardExpiryInput.addEventListener('input', function(e) {
+              let value = e.target.value.replace(/\D/g, '');
+              if (value.length >= 2) {
+                  value = value.slice(0, 2) + '/' + value.slice(2, 4);
+              }
+              e.target.value = value;
+          });
+      }
+
+      // Only allow numbers for CVV
+      const cardCvvInput = document.getElementById('card_cvv');
+      if (cardCvvInput) {
+          cardCvvInput.addEventListener('input', function(e) {
+              e.target.value = e.target.value.replace(/\D/g, '');
+          });
+      }
+  });
+</script>
+{% endblock %}

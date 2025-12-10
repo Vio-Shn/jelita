@@ -1,0 +1,103 @@
+{% extends "base.html" %} {% block title %}Pesanan Saya - Jelita{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <h1 class="text-3xl font-bold text-stone-900 mb-8">Pesanan Saya</h1>
+
+  {% if orders %}
+  <div class="space-y-4">
+    {% for order in orders %}
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h3 class="font-bold text-stone-900 text-lg">
+            {{ order.order_number }}
+          </h3>
+          <p class="text-sm text-stone-600">
+            {{ order.created_at.strftime('%d %B %Y') }}
+          </p>
+        </div>
+        <div class="text-right">
+          {% if order.status == 'pending' %}
+          <span class="badge badge-warning">Menunggu Pembayaran</span>
+          {% elif order.status == 'paid' %}
+          <span class="badge badge-info">Dibayar</span>
+          {% elif order.status == 'processing' %}
+          <span class="badge badge-info">Diproses</span>
+          {% elif order.status == 'shipped' %}
+          <span class="badge badge-info">Dikirim</span>
+          {% elif order.status == 'delivered' %}
+          <span class="badge badge-success">Terkirim</span>
+          {% else %}
+          <span class="badge">{{ order.status }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
+        <div>
+          <p class="text-stone-600">Total Pesanan</p>
+          <p class="font-bold text-brand-navy">
+            Rp {{ "{:,.0f}".format(order.total_amount).replace(',', '.') }}
+          </p>
+        </div>
+        <div>
+          <p class="text-stone-600">Status Pembayaran</p>
+          <p class="font-semibold text-stone-900">
+            {% if order.payment_status == 'paid' %} Sudah Dibayar {% else %}
+            Belum Dibayar {% endif %}
+          </p>
+        </div>
+        <div>
+          <p class="text-stone-600">Jumlah Item</p>
+          <p class="font-semibold text-stone-900">
+            {{ order.items|length }} item
+          </p>
+        </div>
+        <div>
+          <p class="text-stone-600">Nomor Resi</p>
+          <p class="font-semibold text-stone-900">
+            {{ order.tracking_number or '-' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Updated link color to brand navy -->
+      <a
+        href="{{ url_for('order_detail', order_number=order.order_number) }}"
+        class="inline-block text-brand-navy font-semibold hover:underline"
+      >
+        Lihat Detail Pesanan →
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-12">
+    <svg
+      class="w-24 h-24 text-stone-300 mx-auto mb-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+      />
+    </svg>
+    <h2 class="text-2xl font-bold text-stone-900 mb-2">Belum Ada Pesanan</h2>
+    <p class="text-stone-600 mb-6">
+      Anda belum membuat pesanan. Mulai berbelanja sekarang!
+    </p>
+    <!-- Updated button to use brand navy bg and brand yellow text -->
+    <a
+      href="{{ url_for('products') }}"
+      class="inline-block bg-brand-navy text-brand-yellow px-8 py-3 rounded-lg hover:opacity-90 transition-opacity font-semibold"
+    >
+      Belanja Sekarang
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

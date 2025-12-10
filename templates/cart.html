@@ -1,0 +1,189 @@
+{% extends "base.html" %} {% block title %}Keranjang - Jelita{% endblock %} {%
+block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <h1 class="text-3xl font-bold text-slate-900 mb-8">Keranjang Belanja</h1>
+
+  {% if cart_items %}
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Cart Items -->
+    <div class="lg:col-span-2 space-y-4">
+      <div class="bg-white rounded-lg shadow-md p-4 flex items-center gap-3">
+        <!-- Changed checkbox color from red to taupe -->
+        <input
+          type="checkbox"
+          id="selectAll"
+          onchange="toggleSelectAll()"
+          class="w-5 h-5 text-taupe-600 border-slate-300 rounded focus:ring-taupe-500"
+        />
+        <label for="selectAll" class="font-semibold text-slate-900"
+          >Pilih Semua</label
+        >
+      </div>
+
+      {% for item in cart_items %}
+      <div class="bg-white rounded-lg shadow-md p-6 flex gap-6">
+        <div class="flex items-start">
+          <!-- Changed checkbox color to taupe -->
+          <input
+            type="checkbox"
+            class="item-checkbox w-5 h-5 text-taupe-600 border-slate-300 rounded focus:ring-taupe-500 mt-2"
+            data-item-id="{{ item.id }}"
+            data-price="{{ item.price }}"
+            data-quantity="{{ item.quantity }}"
+            onchange="updateOrderSummary()"
+            checked
+          />
+        </div>
+
+        <div
+          class="w-24 h-24 bg-pink-100 rounded-lg overflow-hidden flex-shrink-0"
+        >
+          <!-- Using item.image directly -->
+          <img
+            src="{{ item.image }}"
+            alt="{{ item.name }}"
+            class="w-full h-full object-cover"
+          />
+        </div>
+
+        <div class="flex-1">
+          <!-- Using item.name directly -->
+          <h3 class="font-bold text-slate-900 mb-2">{{ item.name }}</h3>
+          <p class="text-sm text-slate-600">
+            Warna: <span class="font-semibold">{{ item.color }}</span>
+          </p>
+          <!-- Changed price color to taupe -->
+          <p class="text-taupe-700 font-bold mt-2">
+            Rp {{ "{:,.0f}".format(item.price).replace(',', '.') }}
+          </p>
+        </div>
+
+        <div class="flex flex-col items-end gap-3">
+          <!-- Quantity Control -->
+          <div
+            class="flex items-center gap-2 border border-slate-300 rounded-lg"
+          >
+            <button
+              onclick="updateQuantity({{ item.id }}, {{ item.quantity - 1 }})"
+              class="px-3 py-1 hover:bg-slate-100"
+            >
+              -
+            </button>
+            <input
+              type="number"
+              value="{{ item.quantity }}"
+              class="w-12 text-center border-0"
+              readonly
+            />
+            <button
+              onclick="updateQuantity({{ item.id }}, {{ item.quantity + 1 }})"
+              class="px-3 py-1 hover:bg-slate-100"
+            >
+              +
+            </button>
+          </div>
+
+          <!-- Using item.subtotal directly -->
+          <p class="font-bold text-slate-900">
+            Rp {{ "{:,.0f}".format(item.subtotal).replace(',', '.') }}
+          </p>
+
+          <!-- Changed remove button color to taupe -->
+          <button
+            onclick="removeFromCart({{ item.id }})"
+            class="text-taupe-600 text-sm hover:text-taupe-700"
+          >
+            Hapus
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Order Summary -->
+    <div class="lg:col-span-1">
+      <div class="bg-white rounded-lg shadow-md p-6 sticky top-24 space-y-4">
+        <h3 class="font-bold text-slate-900 text-lg">Ringkasan Pesanan</h3>
+
+        <div class="border-t border-slate-200 pt-4 space-y-2">
+          <div class="flex justify-between">
+            <span class="text-slate-600"
+              >Subtotal (<span id="selectedCount">{{ cart_items|length }}</span>
+              item)</span
+            >
+            <span class="font-semibold text-slate-900" id="displaySubtotal"
+              >Rp {{ "{:,.0f}".format(subtotal).replace(',', '.') }}</span
+            >
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-600">Pajak (10%)</span>
+            <span class="font-semibold text-slate-900" id="displayTax"
+              >Rp {{ "{:,.0f}".format(tax).replace(',', '.') }}</span
+            >
+          </div>
+          <p class="text-xs text-slate-500 pt-2">
+            *Biaya pengiriman akan dihitung saat checkout
+          </p>
+        </div>
+
+        <div class="border-t border-slate-200 pt-4">
+          <div class="flex justify-between mb-4">
+            <span class="font-bold text-slate-900">Total Sementara</span>
+            <!-- Changed total color to taupe -->
+            <span class="font-bold text-taupe-700 text-lg" id="displayTotal"
+              >Rp {{ "{:,.0f}".format(subtotal + tax).replace(',', '.') }}</span
+            >
+          </div>
+
+          <!-- Update checkout and continue shopping buttons to use brand navy bg and yellow text -->
+          <button
+            onclick="proceedToCheckout()"
+            class="w-full bg-brand-navy text-brand-yellow text-center py-3 rounded-lg hover:opacity-90 transition-opacity font-semibold mb-2"
+          >
+            Lanjut ke Checkout
+          </button>
+          <a
+            href="{{ url_for('products') }}"
+            class="block w-full border-2 border-brand-navy text-brand-navy text-center py-3 rounded-lg hover:bg-stone-50 transition-colors font-semibold"
+          >
+            Lanjutkan Belanja
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <!-- Empty cart message -->
+  <div class="text-center py-12">
+    <svg
+      class="w-24 h-24 text-slate-300 mx-auto mb-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+      />
+    </svg>
+    <h2 class="text-2xl font-bold text-slate-900 mb-2">
+      Keranjang Anda Kosong
+    </h2>
+    <p class="text-slate-600 mb-6">
+      Mulai berbelanja dan tambahkan produk ke keranjang Anda
+    </p>
+    <!-- Update empty cart button -->
+    <a
+      href="{{ url_for('products') }}"
+      class="inline-block bg-brand-navy text-brand-yellow px-8 py-3 rounded-lg hover:opacity-90 transition-opacity font-semibold"
+    >
+      Mulai Belanja
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+{% endblock %}
